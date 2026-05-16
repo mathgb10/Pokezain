@@ -53,86 +53,88 @@ const Navbar = ({ navigateTo, currentView }) => {
   };
 
   return (
-    <nav className="navbar">
-      <div className="container nav-content">
-        <div onClick={() => handleNavClick("home")} className="logo" style={{ cursor: 'pointer' }}>
-          <span className="logo-poke">Poke</span>
-          <span className="logo-zain">zain</span>
-        </div>
-
-        <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-          <button className={`nav-link-btn ${currentView === 'pokedex' ? 'active' : ''}`} onClick={() => handleNavClick("pokedex")}>Pokedex</button>
-          <button className={`nav-link-btn ${currentView === 'noticias' ? 'active' : ''}`} onClick={() => handleNavClick("noticias")}>Notícias</button>
-          <button className={`nav-link-btn ${currentView === 'roms' ? 'active' : ''}`} onClick={() => handleNavClick("roms")}>ROMs</button>
-          <button className={`nav-link-btn ${currentView === 'emuladores' ? 'active' : ''}`} onClick={() => handleNavClick("emuladores")}>Emuladores</button>
-          <button className={`nav-link-btn ${currentView === 'minecraft' ? 'active' : ''}`} onClick={() => handleNavClick("minecraft")}>Minecraft</button>
-          <button className={`nav-link-btn ${currentView === 'anime' ? 'active' : ''}`} onClick={() => handleNavClick("anime")}>Animes</button>
-          <button className={`nav-link-btn ${currentView === 'manga' ? 'active' : ''}`} onClick={() => handleNavClick("manga")}>Mangás</button>
-          
-          {isAdmin && (
-            <button className={`nav-link-btn admin-link ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick("admin")}>
-              <ShieldCheck size={18} /> Admin
-            </button>
-          )}
-        </div>
-
-        <div className="nav-actions">
-          <button className="theme-toggle-btn" onClick={toggleTheme} title="Alternar Tema">
-            {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
-          </button>
-
-          <div className="notification-bell">
-            <button className="icon-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
-              <Bell size={20} />
-              {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
-            </button>
-            <NotificationsDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+    <>
+      <nav className="navbar">
+        <div className="container nav-content">
+          <div onClick={() => handleNavClick("home")} className="logo" style={{ cursor: 'pointer' }}>
+            <span className="logo-poke">Poke</span>
+            <span className="logo-zain">zain</span>
           </div>
 
-          {user ? (
-            <div className="user-profile-container">
-              <button className="user-profile-btn" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} title="Menu do Usuário">
-                <img src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Profile" className="avatar" />
-                <ChevronDown size={14} className={`menu-arrow ${isUserMenuOpen ? 'open' : ''}`} />
+          <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
+            <button className={`nav-link-btn ${currentView === 'pokedex' ? 'active' : ''}`} onClick={() => handleNavClick("pokedex")}>Pokedex</button>
+            <button className={`nav-link-btn ${currentView === 'noticias' ? 'active' : ''}`} onClick={() => handleNavClick("noticias")}>Notícias</button>
+            <button className={`nav-link-btn ${currentView === 'roms' ? 'active' : ''}`} onClick={() => handleNavClick("roms")}>ROMs</button>
+            <button className={`nav-link-btn ${currentView === 'emuladores' ? 'active' : ''}`} onClick={() => handleNavClick("emuladores")}>Emuladores</button>
+            <button className={`nav-link-btn ${currentView === 'minecraft' ? 'active' : ''}`} onClick={() => handleNavClick("minecraft")}>Minecraft</button>
+            <button className={`nav-link-btn ${currentView === 'anime' ? 'active' : ''}`} onClick={() => handleNavClick("anime")}>Animes</button>
+            <button className={`nav-link-btn ${currentView === 'manga' ? 'active' : ''}`} onClick={() => handleNavClick("manga")}>Mangás</button>
+            
+            {isAdmin && (
+              <button className={`nav-link-btn admin-link ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick("admin")}>
+                <ShieldCheck size={18} /> Admin
               </button>
-              
-              {isUserMenuOpen && (
-                <div className="user-dropdown glass fade-in" style={{ zIndex: 10001 }}>
-                  <div className="user-info-dropdown">
-                    <p className="user-name">{user.displayName || "Treinador"}</p>
-                    <p className="user-email">{user.email}</p>
-                  </div>
-                  <div className="dropdown-divider"></div>
-                  <button 
-                    onClick={(e) => { 
-                      e.stopPropagation();
-                      logout(); 
-                      setIsUserMenuOpen(false); 
-                    }} 
-                    className="dropdown-item logout"
-                  >
-                    <LogOut size={16} /> Sair
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <button onClick={() => setIsAuthModalOpen(true)} className="login-btn glass">
-              <LogIn size={18} /> Entrar
-            </button>
-          )}
+            )}
+          </div>
 
-          <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
-            {isMenuOpen ? <X /> : <Menu />}
-          </button>
+          <div className="nav-actions">
+            <button className="theme-toggle-btn" onClick={toggleTheme} title="Alternar Tema">
+              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
+            </button>
+
+            <div className="notification-bell">
+              <button className="icon-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
+                <Bell size={20} />
+                {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+              </button>
+              <NotificationsDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
+            </div>
+
+            {user ? (
+              <div className="user-profile-container">
+                <button className="user-profile-btn" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} title="Menu do Usuário">
+                  <img src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Profile" className="avatar" />
+                  <ChevronDown size={14} className={`menu-arrow ${isUserMenuOpen ? 'open' : ''}`} />
+                </button>
+                
+                {isUserMenuOpen && (
+                  <div className="user-dropdown glass fade-in" style={{ zIndex: 10001 }}>
+                    <div className="user-info-dropdown">
+                      <p className="user-name">{user.displayName || "Treinador"}</p>
+                      <p className="user-email">{user.email}</p>
+                    </div>
+                    <div className="dropdown-divider"></div>
+                    <button 
+                      onClick={(e) => { 
+                        e.stopPropagation();
+                        logout(); 
+                        setIsUserMenuOpen(false); 
+                      }} 
+                      className="dropdown-item logout"
+                    >
+                      <LogOut size={16} /> Sair
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <button onClick={() => setIsAuthModalOpen(true)} className="login-btn glass">
+                <LogIn size={18} /> Entrar
+              </button>
+            )}
+
+            <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>
+              {isMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
         </div>
-      </div>
+      </nav>
 
       <AuthModal 
         isOpen={isAuthModalOpen} 
         onClose={() => setIsAuthModalOpen(false)} 
       />
-    </nav>
+    </>
   );
 };
 

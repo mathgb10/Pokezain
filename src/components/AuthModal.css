@@ -1,25 +1,13 @@
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.8);
-  backdrop-filter: blur(8px);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 2000;
-  padding: 20px;
-}
+/* O modal-overlay agora é gerenciado globalmente pelo index.css */
 
 .auth-modal {
   width: 100%;
   max-width: 450px;
   padding: 40px;
   position: relative;
-  border-radius: 24px;
+  border-radius: 24px !important; /* Força o arredondamento maior */
   border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: var(--shadow-premium);
 }
 
 .close-btn {
