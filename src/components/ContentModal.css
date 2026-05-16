@@ -1,0 +1,141 @@
+.content-modal-container {
+  padding: 0;
+  overflow: hidden;
+  width: 900px;
+  max-width: 95vw;
+}
+
+.modal-body {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  height: 520px;
+}
+
+.modal-image {
+  padding: 30px;
+  background: var(--card-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--glass-border);
+}
+
+.modal-image img {
+  width: 250px;
+  aspect-ratio: 3/4;
+  border-radius: 16px;
+  object-fit: cover;
+  filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.3));
+}
+
+.modal-info {
+  padding: 30px 40px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.category-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 83, 80, 0.2);
+  color: #ff5350;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  width: fit-content;
+}
+
+.modal-info h2 {
+  font-size: 2.2rem;
+  color: var(--text-main);
+}
+
+.modal-meta {
+  display: flex;
+  gap: 20px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.modal-meta span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.description-box {
+  margin: 10px 0;
+}
+
+.description-box h3 {
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+  color: var(--text-muted);
+}
+
+.description-box p {
+  color: var(--text-muted);
+  line-height: 1.6;
+  font-size: 1rem;
+}
+
+.modal-actions {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.download-primary, .watch-btn, .source-btn {
+  padding: 18px;
+  background: #ff5350;
+  color: var(--text-main);
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.watch-btn {
+  background: #ffcc33;
+  color: #333;
+}
+
+.source-btn {
+  background: #4488ff;
+}
+
+.download-primary:hover, .watch-btn:hover, .source-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.ext-icon {
+  opacity: 0.5;
+}
+
+@media (max-width: 768px) {
+  .modal-body {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal-info {
+    padding: 25px;
+  }
+  
+  .modal-image img {
+    height: 250px;
+  }
+}

@@ -1,0 +1,150 @@
+.navbar {
+  position: sticky;
+  top: 10px;
+  margin: 10px 20px;
+  z-index: 999;
+  padding: 10px 0;
+}
+
+.nav-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.logo {
+  font-size: 1.5rem;
+  font-weight: 800;
+  letter-spacing: -1px;
+}
+
+.logo-poke {
+  color: var(--primary-color);
+}
+
+.logo-zain {
+  color: var(--text-main);
+}
+
+.nav-links {
+  display: flex;
+  gap: 30px;
+  font-weight: 500;
+  transition: var(--transition);
+}
+
+.nav-links a:hover {
+  color: var(--primary-color);
+}
+
+.admin-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--secondary-color) !important;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.notification-bell {
+  position: relative;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.notification-bell:hover {
+  color: var(--text-main);
+}
+
+.notification-dot {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  min-width: 18px;
+  height: 18px;
+  background: var(--primary-color);
+  color: var(--text-main);
+  border-radius: 10px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid var(--bg-accent);
+}
+
+.avatar {
+  width: 35px;
+  height: 35px;
+  border-radius: 50%;
+  border: 2px solid var(--glass-border);
+}
+
+.login-btn {
+  padding: 8px 20px;
+  font-weight: 600;
+  color: var(--text-main);
+  transition: var(--transition);
+}
+
+.login-btn:hover {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.logout-btn {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  margin-left: 10px;
+}
+
+.logout-btn:hover {
+  color: var(--primary-color);
+}
+
+.theme-toggle-btn {
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  transition: var(--transition);
+}
+
+.theme-toggle-btn:hover {
+  color: var(--text-main);
+  transform: rotate(15deg);
+}
+
+.mobile-menu-btn {
+  display: none;
+  color: var(--text-main);
+}
+
+@media (max-width: 768px) {
+  .nav-links {
+    position: absolute;
+    top: 70px;
+    left: 0;
+    right: 0;
+    flex-direction: column;
+    background: rgba(15, 15, 18, 0.95);
+    padding: 20px;
+    gap: 20px;
+    border-radius: 0 0 16px 16px;
+    display: none;
+  }
+
+  .nav-links.active {
+    display: flex;
+  }
+
+  .mobile-menu-btn {
+    display: block;
+  }
+}
