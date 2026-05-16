@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
-import { Bell, User, LogOut, Menu, X, ShieldCheck, LogIn, Sun, Moon } from "lucide-react";
+import { Bell, User, LogOut, Menu, X, ShieldCheck, LogIn, Sun, Moon, ChevronDown } from "lucide-react";
 import AuthModal from "./AuthModal";
 import NotificationsDropdown from "./NotificationsDropdown";
 import { collection, query, onSnapshot, where } from "firebase/firestore";
@@ -91,8 +91,9 @@ const Navbar = ({ navigateTo, currentView }) => {
 
           {user ? (
             <div className="user-profile-container">
-              <button className="user-profile-btn" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
+              <button className="user-profile-btn" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} title="Menu do Usuário">
                 <img src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Profile" className="avatar" />
+                <ChevronDown size={14} className={`menu-arrow ${isUserMenuOpen ? 'open' : ''}`} />
               </button>
               
               {isUserMenuOpen && (

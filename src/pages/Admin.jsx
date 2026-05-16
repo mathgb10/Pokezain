@@ -27,6 +27,7 @@ const Admin = () => {
     imageUrl: ""
   });
   const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState("");
   const [imageType, setImageType] = useState("url"); // url, file
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
@@ -151,6 +152,7 @@ const Admin = () => {
       setSuccess(true);
       setFormData({ title: "", description: "", type: "rom", url: "", imageUrl: "" });
       setImageFile(null);
+      setImagePreview("");
       setEditingId(null);
       setImageType("url");
       setTimeout(() => setSuccess(false), 4000);
@@ -309,8 +311,16 @@ const Admin = () => {
 
             <div className="form-group">
               <label>Imagem de Capa (URL ou Upload)</label>
+              
+              {(imagePreview || formData.imageUrl) && (
+                <div className="admin-image-preview glass fade-in">
+                  <p>Pré-visualização:</p>
+                  <img src={imageType === 'file' ? imagePreview : formData.imageUrl} alt="Preview" />
+                </div>
+              )}
+
               <div className="image-input-container">
-                <div className="url-input-wrapper glass">
+                <div className={`url-input-wrapper glass ${imageType === 'url' && formData.imageUrl ? 'active-selection' : ''}`}>
                   <ImageIcon size={20} />
                   <input 
                     type="url" 
@@ -319,6 +329,8 @@ const Admin = () => {
                     onChange={(e) => {
                       setFormData({...formData, imageUrl: e.target.value});
                       setImageType('url');
+                      setImageFile(null);
+                      setImagePreview("");
                     }}
                     className="image-url-input"
                   />
@@ -328,22 +340,41 @@ const Admin = () => {
                   <span>OU</span>
                 </div>
 
-                <div className={`file-input-wrapper glass ${imageFile ? 'active-upload' : ''}`}>
+                <div className={`file-input-wrapper glass ${imageType === 'file' ? 'active-upload' : ''}`}>
                   <Upload size={20} />
                   <span>{imageFile ? imageFile.name : "Fazer upload de arquivo"}</span>
                   <input 
                     type="file" 
                     accept="image/*"
                     onChange={(e) => {
-                      if (e.target.files[0]) {
-                        setImageFile(e.target.files[0]);
+                      const file = e.target.files[0];
+                      if (file) {
+                        setImageFile(file);
                         setImageType('file');
+                        setFormData({...formData, imageUrl: ""});
+                        const reader = new FileReader();
+                        reader.onloadend = () => setImagePreview(reader.result);
+                        reader.readAsDataURL(file);
                       }
                     }}
                   />
+                  {imageFile && (
+                    <button 
+                      type="button" 
+                      className="clear-file-btn"
+                      onClick={(e) => {
+                        e.preventDefault();
+                        setImageFile(null);
+                        setImagePreview("");
+                        setImageType('url');
+                      }}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               </div>
-              <p className="field-hint">Dica: Links da web são recomendados. Se fizer upload, o arquivo terá prioridade ao salvar.</p>
+              <p className="field-hint">Dica: Links da web são recomendados para economizar espaço no Storage. Se fizer upload, o arquivo terá prioridade.</p>
             </div>
 
 

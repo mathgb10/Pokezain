@@ -122,6 +122,21 @@
   cursor: pointer;
   display: flex;
   align-items: center;
+  gap: 8px;
+  color: var(--text-muted);
+  transition: var(--transition);
+}
+
+.user-profile-btn:hover {
+  color: var(--text-main);
+}
+
+.menu-arrow {
+  transition: transform 0.3s ease;
+}
+
+.menu-arrow.open {
+  transform: rotate(180deg);
 }
 
 .user-dropdown {
