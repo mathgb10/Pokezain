@@ -70,6 +70,10 @@ Siga os passos abaixo para rodar o projeto em sua máquina local:
    VITE_FIREBASE_STORAGE_BUCKET=seu_projeto.appspot.com
    VITE_FIREBASE_MESSAGING_SENDER_ID=seu_id
    VITE_FIREBASE_APP_ID=seu_app_id
+
+   # Credenciais Administrativas (Para scripts de setup)
+   ADMIN_EMAIL=seu-email@admin.com
+   ADMIN_PASSWORD=sua-senha-segura
    ```
 
 4. **Inicie o servidor:**
@@ -84,12 +88,20 @@ Siga os passos abaixo para rodar o projeto em sua máquina local:
 Para garantir a integridade dos dados, certifique-se de aplicar as seguintes regras no seu console Firebase:
 
 ```javascript
+rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /{document=**} {
-      allow read: if true;
-      allow write: if request.auth != null && request.auth.token.admin == true;
+    function isAdmin() {
+      return request.auth != null && 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
     }
+
+    match /content/{docId} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
+    
+    // ... outras regras específicas
   }
 }
 ```

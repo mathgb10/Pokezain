@@ -19,8 +19,8 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 
 async function createAdmin() {
-  const email = "matheus@email.com";
-  const password = "Mathzila2018";
+  const email = process.env.ADMIN_EMAIL || "seu-email-aqui@email.com";
+  const password = process.env.ADMIN_PASSWORD || "sua-senha-segura-aqui";
 
   try {
     // Try to create user first
