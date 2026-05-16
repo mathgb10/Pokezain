@@ -28,18 +28,11 @@ const Admin = () => {
   });
   const [imageFile, setImageFile] = useState(null);
   const [imageType, setImageType] = useState("url"); // url, file
-  const [uploadProgress, setUploadProgress] = useState(0);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
-  React.useEffect(() => {
-    if (activeTab === "manage") {
-      fetchContent();
-    }
-  }, [activeTab]);
-
-  const fetchContent = async () => {
+  const fetchContent = React.useCallback(async () => {
     setFetchingContent(true);
     try {
       const querySnapshot = await getDocs(collection(db, "content"));
@@ -58,11 +51,17 @@ const Admin = () => {
     } finally {
       setFetchingContent(false);
     }
-  };
+  }, []);
 
   React.useEffect(() => {
-    fetchContent();
-  }, []);
+    // Busca conteúdo no mount ou quando a aba muda para 'manage'
+    if (activeTab === "manage" || activeTab === "dashboard") {
+      const timer = setTimeout(() => fetchContent(), 0);
+      return () => clearTimeout(timer);
+    }
+  }, [activeTab, fetchContent]);
+
+
 
   const confirmDelete = (item) => {
     setItemToDelete(item);
@@ -112,10 +111,20 @@ const Admin = () => {
     try {
       let finalImageUrl = formData.imageUrl;
 
-      if (imageType === "file" && imageFile) {
-        const storageRef = ref(storage, `content/${Date.now()}_${imageFile.name}`);
-        const snapshot = await uploadBytes(storageRef, imageFile);
-        finalImageUrl = await getDownloadURL(snapshot.ref);
+      // Se houver um arquivo selecionado, o upload tem prioridade
+      if (imageFile) {
+        try {
+          const storageRef = ref(storage, `content/${Date.now()}_${imageFile.name}`);
+          const snapshot = await uploadBytes(storageRef, imageFile);
+          finalImageUrl = await getDownloadURL(snapshot.ref);
+        } catch (uploadErr) {
+          console.error("Erro no upload:", uploadErr);
+          throw new Error("Falha ao fazer upload da imagem. Verifique as permissões do Firebase Storage.");
+        }
+      }
+
+      if (!finalImageUrl && !editingId) {
+        throw new Error("Por favor, forneça um link de imagem ou faça upload de um arquivo.");
       }
 
       const contentData = {
@@ -143,18 +152,19 @@ const Admin = () => {
       setFormData({ title: "", description: "", type: "rom", url: "", imageUrl: "" });
       setImageFile(null);
       setEditingId(null);
+      setImageType("url");
       setTimeout(() => setSuccess(false), 4000);
       if (editingId) {
         setActiveTab("manage");
-        setImageType("url");
       }
     } catch (err) {
       console.error(err);
-      alert("Erro ao enviar conteúdo: " + err.message);
+      alert(err.message || "Erro ao enviar conteúdo.");
     } finally {
       setLoading(false);
     }
   };
+
 
   if (!isAdmin) return (
     <div className="container" style={{padding: "100px 0", textAlign: "center"}}>
@@ -298,45 +308,44 @@ const Admin = () => {
             </div>
 
             <div className="form-group">
-              <label>Imagem de Capa</label>
-              <div className="image-type-selector">
-                <button 
-                  type="button" 
-                  className={`type-option ${imageType === 'url' ? 'active' : ''}`}
-                  onClick={() => setImageType('url')}
-                >
-                  Link da Web
-                </button>
-                <button 
-                  type="button" 
-                  className={`type-option ${imageType === 'file' ? 'active' : ''}`}
-                  onClick={() => setImageType('file')}
-                >
-                  Upload de Arquivo
-                </button>
-              </div>
+              <label>Imagem de Capa (URL ou Upload)</label>
+              <div className="image-input-container">
+                <div className="url-input-wrapper glass">
+                  <ImageIcon size={20} />
+                  <input 
+                    type="url" 
+                    placeholder="Cole o link da imagem aqui (PNG, JPG, etc)..."
+                    value={formData.imageUrl}
+                    onChange={(e) => {
+                      setFormData({...formData, imageUrl: e.target.value});
+                      setImageType('url');
+                    }}
+                    className="image-url-input"
+                  />
+                </div>
+                
+                <div className="image-divider">
+                  <span>OU</span>
+                </div>
 
-              {imageType === "url" ? (
-                <input 
-                  type="url" 
-                  required={imageType === "url"} 
-                  placeholder="https://..."
-                  value={formData.imageUrl}
-                  onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
-                />
-              ) : (
-                <div className="file-input-wrapper glass">
-                  <ImageIcon size={24} />
-                  <span>{imageFile ? imageFile.name : "Selecionar PNG/JPG..."}</span>
+                <div className={`file-input-wrapper glass ${imageFile ? 'active-upload' : ''}`}>
+                  <Upload size={20} />
+                  <span>{imageFile ? imageFile.name : "Fazer upload de arquivo"}</span>
                   <input 
                     type="file" 
                     accept="image/*"
-                    required={imageType === "file" && !editingId}
-                    onChange={(e) => setImageFile(e.target.files[0])}
+                    onChange={(e) => {
+                      if (e.target.files[0]) {
+                        setImageFile(e.target.files[0]);
+                        setImageType('file');
+                      }
+                    }}
                   />
                 </div>
-              )}
+              </div>
+              <p className="field-hint">Dica: Links da web são recomendados. Se fizer upload, o arquivo terá prioridade ao salvar.</p>
             </div>
+
 
             <div className="admin-form-actions">
               {editingId && (

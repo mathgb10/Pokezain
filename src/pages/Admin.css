@@ -59,39 +59,80 @@ input:focus, select:focus, textarea:focus {
   background: var(--bg-accent);
 }
 
-.image-type-selector {
+.image-input-container {
   display: flex;
-  gap: 10px;
-  margin-bottom: 10px;
+  flex-direction: column;
+  gap: 15px;
 }
 
-.type-option {
-  flex: 1;
-  padding: 8px;
-  border-radius: 8px;
-  background: var(--card-bg);
-  border: 1px solid var(--glass-border);
+.image-url-input {
+  width: 100%;
+}
+
+.image-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  height: 20px;
+}
+
+.image-divider::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 1px;
+  background: var(--glass-border);
+  z-index: 0;
+}
+
+.image-divider span {
+  background: var(--bg-main);
+  padding: 0 15px;
+  font-size: 0.75rem;
+  font-weight: 700;
   color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s;
-}
-
-.type-option.active {
-  background: var(--primary-color);
-  border-color: var(--primary-color);
-  color: white;
+  z-index: 1;
 }
 
 .file-input-wrapper {
   position: relative;
-  padding: 15px;
+  padding: 12px;
   display: flex;
   align-items: center;
-  gap: 15px;
+  justify-content: center;
+  gap: 12px;
   cursor: pointer;
   border-style: dashed;
+  font-size: 0.9rem;
+}
+
+.file-input-wrapper.active-upload {
+  border-color: var(--primary-color);
+  background: rgba(255, 83, 80, 0.05);
+  border-style: solid;
+}
+
+.url-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 15px;
+  background: var(--card-bg);
+  border-radius: 12px;
+}
+
+.url-input-wrapper input {
+  border: none !important;
+  background: transparent !important;
+  flex: 1;
+  padding: 12px 0;
+}
+
+.url-input-wrapper svg {
+  color: var(--text-muted);
 }
 
 .file-input-wrapper input {
@@ -103,6 +144,13 @@ input:focus, select:focus, textarea:focus {
   height: 100%;
   cursor: pointer;
 }
+
+.field-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  margin-top: 5px;
+}
+
 
 .submit-btn {
   background: var(--primary-color);

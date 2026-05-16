@@ -1,12 +1,11 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
 import { Gamepad2, Database, Download, Sparkles, Newspaper, Play, BookOpen, Eye, Clock } from "lucide-react";
 import { db } from "../firebase";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import "./Home.css";
 
-const Home = () => {
+const Home = ({ navigateTo }) => {
   return (
     <div className="home-page fade-in">
       {/* Hero Section */}
@@ -25,8 +24,8 @@ const Home = () => {
               Explore ROMs fan-made, emuladores premium, mods de Minecraft e a Pokedex mais completa, tudo em um só lugar.
             </p>
             <div className="hero-cta">
-              <Link to="/roms" className="btn-primary">Explorar Agora</Link>
-              <Link to="/pokedex" className="btn-secondary glass">Ver Pokedex</Link>
+              <button onClick={() => navigateTo("roms")} className="btn-primary">Explorar Agora</button>
+              <button onClick={() => navigateTo("pokedex")} className="btn-secondary glass">Ver Pokedex</button>
             </div>
           </motion.div>
           
@@ -46,7 +45,7 @@ const Home = () => {
       </section>
 
       {/* Recent Feed */}
-      <RecentFeed />
+      <RecentFeed navigateTo={navigateTo} />
 
       {/* Categories Grid */}
       <section className="categories container">
@@ -56,43 +55,43 @@ const Home = () => {
             icon={<Newspaper />} 
             title="Notícias" 
             desc="Fique por dentro das últimas do mundo Pokémon." 
-            to="/noticias"
+            onClick={() => navigateTo("noticias")}
           />
           <CategoryCard 
             icon={<Gamepad2 />} 
             title="Fan-made ROMs" 
             desc="Novas histórias e regiões criadas por fãs." 
-            to="/roms"
+            onClick={() => navigateTo("roms")}
           />
           <CategoryCard 
             icon={<Download />} 
             title="Emuladores" 
             desc="Versões configuradas para PC e Mobile." 
-            to="/emuladores"
+            onClick={() => navigateTo("emuladores")}
           />
           <CategoryCard 
             icon={<Database />} 
             title="Pokedex Nacional" 
             desc="Dados detalhados de todos os Pokémons." 
-            to="/pokedex"
+            onClick={() => navigateTo("pokedex")}
           />
           <CategoryCard 
             icon={<Sparkles />} 
             title="Mods Minecraft" 
             desc="Pixelmon, Cobblemon e mais." 
-            to="/minecraft"
+            onClick={() => navigateTo("minecraft")}
           />
           <CategoryCard 
             icon={<Play />} 
             title="Animes" 
             desc="Assista e baixe episódios clássicos." 
-            to="/anime"
+            onClick={() => navigateTo("anime")}
           />
           <CategoryCard 
             icon={<BookOpen />} 
             title="Mangás" 
             desc="Leia as aventuras do mangá oficial." 
-            to="/manga"
+            onClick={() => navigateTo("manga")}
           />
         </div>
       </section>
@@ -100,7 +99,7 @@ const Home = () => {
   );
 };
 
-const RecentFeed = () => {
+const RecentFeed = ({ navigateTo }) => {
   const [recentItems, setRecentItems] = React.useState([]);
   const [loading, setLoading] = React.useState(true);
 
@@ -121,24 +120,12 @@ const RecentFeed = () => {
 
   if (loading || recentItems.length === 0) return null;
 
-  const getRoute = (type) => {
-    switch(type) {
-      case 'news': return '/noticias';
-      case 'rom': return '/roms';
-      case 'emulator': return '/emuladores';
-      case 'anime': return '/anime';
-      case 'manga': return '/manga';
-      case 'minecraft': return '/minecraft';
-      default: return '/';
-    }
-  };
-
   return (
     <section className="recent-feed container">
       <h2 className="section-title">Adicionados Recentemente</h2>
       <div className="feed-grid">
         {recentItems.map(item => (
-          <Link key={item.id} to={getRoute(item.type)} className="feed-card glass">
+          <div key={item.id} onClick={() => navigateTo("content", item.type, item.title)} className="feed-card glass" style={{ cursor: 'pointer' }}>
             <div className="feed-img">
               <img src={item.imageUrl || "https://api.dicebear.com/7.x/initials/svg?seed=poke"} alt={item.title} />
               <span className={`feed-badge ${item.type}`}>{item.type}</span>
@@ -150,15 +137,15 @@ const RecentFeed = () => {
                 <span><Clock size={14} /> {item.createdAt?.toDate().toLocaleDateString()}</span>
               </div>
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </section>
   );
 };
 
-const CategoryCard = ({ icon, title, desc, to }) => (
-  <Link to={to} style={{ textDecoration: 'none' }}>
+const CategoryCard = ({ icon, title, desc, onClick }) => (
+  <div onClick={onClick} style={{ cursor: 'pointer' }}>
     <motion.div 
       className="cat-card glass"
       whileHover={{ y: -10 }}
@@ -168,7 +155,7 @@ const CategoryCard = ({ icon, title, desc, to }) => (
       <h3>{title}</h3>
       <p>{desc}</p>
     </motion.div>
-  </Link>
+  </div>
 );
 
 export default Home;

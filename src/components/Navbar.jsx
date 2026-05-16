@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 import { useTheme } from "../context/ThemeContext";
 import { Bell, User, LogOut, Menu, X, ShieldCheck, LogIn, Sun, Moon } from "lucide-react";
@@ -9,7 +8,7 @@ import { collection, query, onSnapshot, where } from "firebase/firestore";
 import { db } from "../firebase";
 import "./Navbar.css";
 
-const Navbar = () => {
+const Navbar = ({ navigateTo, currentView }) => {
   const { user, isAdmin, logout } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -33,27 +32,47 @@ const Navbar = () => {
     return () => unsubscribe();
   }, [user]);
 
+  // Fechar menus ao clicar fora
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (isUserMenuOpen && !event.target.closest(".user-profile-container")) {
+        setIsUserMenuOpen(false);
+      }
+      if (isNotifOpen && !event.target.closest(".notification-bell")) {
+        setIsNotifOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [isUserMenuOpen, isNotifOpen]);
+
+  const handleNavClick = (page) => {
+    navigateTo(page);
+    setIsMenuOpen(false);
+  };
+
   return (
     <nav className="navbar glass">
       <div className="container nav-content">
-        <Link to="/" className="logo">
+        <div onClick={() => handleNavClick("home")} className="logo" style={{ cursor: 'pointer' }}>
           <span className="logo-poke">Poke</span>
           <span className="logo-zain">zain</span>
-        </Link>
+        </div>
 
         <div className={`nav-links ${isMenuOpen ? "active" : ""}`}>
-          <Link to="/pokedex" onClick={() => setIsMenuOpen(false)}>Pokedex</Link>
-          <Link to="/noticias" onClick={() => setIsMenuOpen(false)}>Notícias</Link>
-          <Link to="/roms" onClick={() => setIsMenuOpen(false)}>ROMs</Link>
-          <Link to="/emuladores" onClick={() => setIsMenuOpen(false)}>Emuladores</Link>
-          <Link to="/minecraft" onClick={() => setIsMenuOpen(false)}>Minecraft</Link>
-          <Link to="/anime" onClick={() => setIsMenuOpen(false)}>Animes</Link>
-          <Link to="/manga" onClick={() => setIsMenuOpen(false)}>Mangás</Link>
+          <button className={`nav-link-btn ${currentView === 'pokedex' ? 'active' : ''}`} onClick={() => handleNavClick("pokedex")}>Pokedex</button>
+          <button className={`nav-link-btn ${currentView === 'noticias' ? 'active' : ''}`} onClick={() => handleNavClick("noticias")}>Notícias</button>
+          <button className={`nav-link-btn ${currentView === 'roms' ? 'active' : ''}`} onClick={() => handleNavClick("roms")}>ROMs</button>
+          <button className={`nav-link-btn ${currentView === 'emuladores' ? 'active' : ''}`} onClick={() => handleNavClick("emuladores")}>Emuladores</button>
+          <button className={`nav-link-btn ${currentView === 'minecraft' ? 'active' : ''}`} onClick={() => handleNavClick("minecraft")}>Minecraft</button>
+          <button className={`nav-link-btn ${currentView === 'anime' ? 'active' : ''}`} onClick={() => handleNavClick("anime")}>Animes</button>
+          <button className={`nav-link-btn ${currentView === 'manga' ? 'active' : ''}`} onClick={() => handleNavClick("manga")}>Mangás</button>
           
           {isAdmin && (
-            <Link to="/admin" className="admin-link" onClick={() => setIsMenuOpen(false)}>
+            <button className={`nav-link-btn admin-link ${currentView === 'admin' ? 'active' : ''}`} onClick={() => handleNavClick("admin")}>
               <ShieldCheck size={18} /> Admin
-            </Link>
+            </button>
           )}
         </div>
 
@@ -62,9 +81,11 @@ const Navbar = () => {
             {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
           </button>
 
-          <div className="notification-bell" onClick={() => setIsNotifOpen(!isNotifOpen)}>
-            <Bell size={20} />
-            {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+          <div className="notification-bell">
+            <button className="icon-btn" onClick={() => setIsNotifOpen(!isNotifOpen)}>
+              <Bell size={20} />
+              {unreadCount > 0 && <span className="notification-dot">{unreadCount}</span>}
+            </button>
             <NotificationsDropdown isOpen={isNotifOpen} onClose={() => setIsNotifOpen(false)} />
           </div>
 
@@ -75,22 +96,29 @@ const Navbar = () => {
               </button>
               
               {isUserMenuOpen && (
-                <div className="user-dropdown glass fade-in">
+                <div className="user-dropdown glass fade-in" style={{ zIndex: 10001 }}>
                   <div className="user-info-dropdown">
                     <p className="user-name">{user.displayName || "Treinador"}</p>
                     <p className="user-email">{user.email}</p>
                   </div>
                   <div className="dropdown-divider"></div>
-                  <button onClick={logout} className="dropdown-item logout">
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation();
+                      logout(); 
+                      setIsUserMenuOpen(false); 
+                    }} 
+                    className="dropdown-item logout"
+                  >
                     <LogOut size={16} /> Sair
                   </button>
                 </div>
               )}
             </div>
           ) : (
-            <Link to="/auth" className="login-btn glass">
+            <button onClick={() => setIsAuthModalOpen(true)} className="login-btn glass">
               <LogIn size={18} /> Entrar
-            </Link>
+            </button>
           )}
 
           <button className="mobile-menu-btn" onClick={() => setIsMenuOpen(!isMenuOpen)}>

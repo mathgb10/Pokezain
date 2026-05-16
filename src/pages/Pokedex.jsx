@@ -5,6 +5,7 @@ import { useAuth } from "../context/AuthContext";
 import { db } from "../firebase";
 import { doc, updateDoc, arrayUnion, arrayRemove, getDoc } from "firebase/firestore";
 import PokemonModal from "../components/PokemonModal";
+import AuthModal from "../components/AuthModal";
 import "./Pokedex.css";
 
 const GENS = [
@@ -69,10 +70,19 @@ const Pokedex = () => {
   const PAGE_SIZE = 20;
   const { user } = useAuth();
   const [loginAlertOpen, setLoginAlertOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
-  useEffect(() => {
-    fetchAllPokemon();
-  }, []);
+  const fetchFavorites = async () => {
+    if (!user) return;
+    try {
+      const userDoc = await getDoc(doc(db, "users", user.uid));
+      if (userDoc.exists()) {
+        setFavorites(userDoc.data().favorites || []);
+      }
+    } catch (err) {
+      console.error("Erro ao buscar favoritos:", err);
+    }
+  };
 
   const fetchAllPokemon = async () => {
     try {
@@ -93,25 +103,24 @@ const Pokedex = () => {
     }
   };
 
-  useEffect(() => {
-    setPage(0);
-    fetchPokemon(0);
-  }, [currentGen]);
-
-  const fetchPokemon = async (targetPage = page) => {
-    if (search.trim() !== "") return; // Don't fetch paginated list if searching globally
+  const fetchPokemon = React.useCallback(async (targetPage, currentSearch) => {
+    // Se houver busca ativa, não carregamos por geração/página padrão
+    if (currentSearch && currentSearch.trim() !== "") return;
 
     setLoading(true);
     try {
-      let offset = currentGen.id === 0
+      const offset = currentGen.id === 0
         ? targetPage * PAGE_SIZE
         : currentGen.offset + (targetPage * PAGE_SIZE);
 
       let limit = PAGE_SIZE;
-
       if (currentGen.id !== 0) {
         const remaining = currentGen.limit - (targetPage * PAGE_SIZE);
-        if (remaining <= 0) return;
+        if (remaining <= 0) {
+          setPokemon([]);
+          setLoading(false);
+          return;
+        }
         limit = Math.min(PAGE_SIZE, remaining);
       }
 
@@ -122,32 +131,34 @@ const Pokedex = () => {
             const detail = await axios.get(p.url);
             return detail.data;
           } catch (e) {
+            console.error("Erro ao detalhar pokemon:", p.name, e);
             return null;
           }
         })
       );
-      setPokemon(detailedData.filter(p => p !== null));
-      setLoading(false);
+      const validPokemon = detailedData.filter(p => p !== null && p.sprites);
+      setPokemon(validPokemon);
     } catch (err) {
-      console.error(err);
+      console.error("Erro ao carregar Pokémon:", err);
+    } finally {
       setLoading(false);
     }
-  };
+  }, [currentGen]);
 
-  const handleGlobalSearch = async () => {
-    if (search.trim() === "") {
-      fetchPokemon(0);
+  const handleGlobalSearch = React.useCallback(async (query) => {
+    if (!query || query.trim() === "") {
+      setPage(0);
+      fetchPokemon(0, "");
       return;
     }
 
     setLoading(true);
-    setPage(0);
     try {
-      // Search in our local cache
+      const searchLower = query.toLowerCase().trim();
       const results = allPokemon.filter(p => 
-        p.name.toLowerCase().includes(search.toLowerCase().trim()) || 
-        p.id.toString() === search.trim()
-      ).slice(0, 40); // Limit to 40 results for performance
+        p.name.toLowerCase().includes(searchLower) || 
+        p.id.toString() === searchLower
+      ).slice(0, 40);
 
       if (results.length > 0) {
         const detailedData = await Promise.all(
@@ -155,50 +166,62 @@ const Pokedex = () => {
             try {
               const detail = await axios.get(p.url);
               return detail.data;
-            } catch (e) { return null; }
+            } catch { return null; }
           })
         );
-        setPokemon(detailedData.filter(p => p !== null));
+        const filtered = detailedData.filter(p => p !== null && p.sprites);
+        setPokemon(filtered);
       } else {
         setPokemon([]);
       }
     } catch (err) {
-      console.error(err);
+      console.error("Erro na busca global:", err);
       setPokemon([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [allPokemon, fetchPokemon]);
+
+  // Carregar lista base de Pokémon uma única vez
+  useEffect(() => {
+    fetchAllPokemon();
+  }, []);
+
+  // Efeito principal: Paginação e Geração
+  useEffect(() => {
+    if (search.trim() === "") {
+      fetchPokemon(page, "");
+    }
+  }, [page, currentGen, fetchPokemon, search]);
+
+  // Efeito de Busca com Debounce
+  useEffect(() => {
+    if (search.trim() !== "") {
+      const timer = setTimeout(() => {
+        handleGlobalSearch(search);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [search, handleGlobalSearch]);
+
+  // Reset da página quando a geração muda
+  useEffect(() => {
+    setPage(0);
+  }, [currentGen]);
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
-    fetchPokemon(newPage);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Debounce search
   useEffect(() => {
-    const timer = setTimeout(() => {
-      if (search.trim() !== "") {
-        handleGlobalSearch();
-      } else {
-        fetchPokemon(0);
-      }
-    }, 500);
-
-    return () => clearTimeout(timer);
-  }, [search]);
-
-  useEffect(() => {
-    if (user) fetchFavorites();
+    if (user) {
+      const timer = setTimeout(() => fetchFavorites(), 0);
+      return () => clearTimeout(timer);
+    }
   }, [user]);
 
-  const fetchFavorites = async () => {
-    const userDoc = await getDoc(doc(db, "users", user.uid));
-    if (userDoc.exists()) {
-      setFavorites(userDoc.data().favorites || []);
-    }
-  };
+
 
   const handlePokeClick = async (p) => {
     setSelectedPokemon(p);
@@ -392,12 +415,16 @@ const Pokedex = () => {
               >
                 <Heart fill={favorites.includes(p.id) ? "#ff5350" : "none"} size={18} />
               </button>
-              <div className={`img-wrapper ${p.types[0].type.name}`}>
-                <img src={p.sprites.other['official-artwork'].front_default} alt={p.name} />
+              <div className={`img-wrapper ${p.types?.[0]?.type?.name || 'normal'}`}>
+                <img 
+                  src={p.sprites?.other?.['official-artwork']?.front_default || p.sprites?.front_default || 'https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/items/poke-ball.png'} 
+                  alt={p.name} 
+                  loading="lazy"
+                />
               </div>
               <h3>{p.name}</h3>
               <div className="poke-types">
-                {p.types.map(t => (
+                {p.types?.map(t => (
                   <span key={t.type.name} className={`type-badge ${t.type.name}`}>
                     {t.type.name}
                   </span>
@@ -455,12 +482,17 @@ const Pokedex = () => {
               <button onClick={() => setLoginAlertOpen(false)} style={{ padding: '10px 20px', borderRadius: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-main)', cursor: 'pointer', flex: 1 }}>Cancelar</button>
               <button onClick={() => {
                 setLoginAlertOpen(false);
-                window.location.href = '/auth';
+                setIsAuthModalOpen(true);
               }} style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--primary-color)', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>Fazer Login</button>
             </div>
           </div>
         </div>
       )}
+
+      <AuthModal 
+        isOpen={isAuthModalOpen} 
+        onClose={() => setIsAuthModalOpen(false)} 
+      />
     </div>
   );
 };
