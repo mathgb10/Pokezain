@@ -23,9 +23,14 @@ const Admin = () => {
     title: "",
     description: "",
     type: "rom",
-    url: ""
+    url: "",
+    imageUrl: ""
   });
   const [imageFile, setImageFile] = useState(null);
+  const [imageType, setImageType] = useState("url"); // url, file
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
   const [editingId, setEditingId] = useState(null);
 
   React.useEffect(() => {
@@ -59,22 +64,30 @@ const Admin = () => {
     fetchContent();
   }, []);
 
-  const handleDelete = async (item) => {
-    if (!window.confirm(`Deseja realmente excluir "${item.title}"?`)) return;
+  const confirmDelete = (item) => {
+    setItemToDelete(item);
+    setDeleteModalOpen(true);
+  };
+
+  const executeDelete = async () => {
+    if (!itemToDelete) return;
     
     try {
-      await deleteDoc(doc(db, "content", item.id));
-      // Opcional: deletar imagem do storage se existir
-      if (item.imageUrl && item.imageUrl.includes("firebasestorage")) {
+      await deleteDoc(doc(db, "content", itemToDelete.id));
+      if (itemToDelete.imageUrl && itemToDelete.imageUrl.includes("firebasestorage")) {
         try {
-          const imageRef = ref(storage, item.imageUrl);
+          const imageRef = ref(storage, itemToDelete.imageUrl);
           await deleteObject(imageRef);
         } catch (e) { console.error("Erro ao deletar imagem:", e); }
       }
-      setContentList(contentList.filter(i => i.id !== item.id));
-      alert("Conteúdo excluído com sucesso!");
+      setContentList(contentList.filter(i => i.id !== itemToDelete.id));
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 4000);
     } catch (err) {
       alert("Erro ao excluir: " + err.message);
+    } finally {
+      setDeleteModalOpen(false);
+      setItemToDelete(null);
     }
   };
 
@@ -83,9 +96,12 @@ const Admin = () => {
       title: item.title,
       description: item.description,
       type: item.type,
-      url: item.url || item.downloadUrl || ""
+      url: item.url || item.downloadUrl || "",
+      imageUrl: item.imageUrl || ""
     });
     setEditingId(item.id);
+    setImageType("url");
+    setImageFile(null);
     setActiveTab("add");
   };
 
@@ -94,16 +110,17 @@ const Admin = () => {
     setLoading(true);
 
     try {
-      let imageUrl = formData.imageUrl || "";
-      if (imageFile) {
-        const imageRef = ref(storage, `images/${Date.now()}_${imageFile.name}`);
-        await uploadBytes(imageRef, imageFile);
-        imageUrl = await getDownloadURL(imageRef);
+      let finalImageUrl = formData.imageUrl;
+
+      if (imageType === "file" && imageFile) {
+        const storageRef = ref(storage, `content/${Date.now()}_${imageFile.name}`);
+        const snapshot = await uploadBytes(storageRef, imageFile);
+        finalImageUrl = await getDownloadURL(snapshot.ref);
       }
 
       const contentData = {
         ...formData,
-        imageUrl,
+        imageUrl: finalImageUrl,
         views: editingId ? (contentList.find(i => i.id === editingId)?.views || 0) : 0,
         updatedAt: serverTimestamp()
       };
@@ -123,11 +140,14 @@ const Admin = () => {
       }
 
       setSuccess(true);
-      setFormData({ title: "", description: "", type: "rom", url: "" });
+      setFormData({ title: "", description: "", type: "rom", url: "", imageUrl: "" });
       setImageFile(null);
       setEditingId(null);
       setTimeout(() => setSuccess(false), 4000);
-      if (editingId) setActiveTab("manage");
+      if (editingId) {
+        setActiveTab("manage");
+        setImageType("url");
+      }
     } catch (err) {
       console.error(err);
       alert("Erro ao enviar conteúdo: " + err.message);
@@ -167,7 +187,7 @@ const Admin = () => {
           className={`tab-btn ${activeTab === 'add' ? 'active' : ''}`}
           onClick={() => {
             setActiveTab('add');
-            if (!editingId) setFormData({ title: "", description: "", type: "rom", url: "" });
+            if (!editingId) setFormData({ title: "", description: "", type: "rom", url: "", imageUrl: "" });
           }}
         >
           <FilePlus size={20} /> {editingId ? "Editar Conteúdo" : "Adicionar Conteúdo"}
@@ -278,24 +298,53 @@ const Admin = () => {
             </div>
 
             <div className="form-group">
-              <label>Imagem de Capa / Poster</label>
-              <div className="file-input-wrapper glass">
-                <ImageIcon size={20} />
-                <span>{imageFile ? imageFile.name : "Selecionar Foto (PNG, JPG)..."}</span>
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  onChange={(e) => setImageFile(e.target.files[0])}
-                />
+              <label>Imagem de Capa</label>
+              <div className="image-type-selector">
+                <button 
+                  type="button" 
+                  className={`type-option ${imageType === 'url' ? 'active' : ''}`}
+                  onClick={() => setImageType('url')}
+                >
+                  Link da Web
+                </button>
+                <button 
+                  type="button" 
+                  className={`type-option ${imageType === 'file' ? 'active' : ''}`}
+                  onClick={() => setImageType('file')}
+                >
+                  Upload de Arquivo
+                </button>
               </div>
-              {editingId && !imageFile && <p style={{fontSize: "0.8rem", opacity: 0.6, marginTop: "5px"}}>Mantenha vazio para preservar a imagem atual.</p>}
+
+              {imageType === "url" ? (
+                <input 
+                  type="url" 
+                  required={imageType === "url"} 
+                  placeholder="https://..."
+                  value={formData.imageUrl}
+                  onChange={(e) => setFormData({...formData, imageUrl: e.target.value})}
+                />
+              ) : (
+                <div className="file-input-wrapper glass">
+                  <ImageIcon size={24} />
+                  <span>{imageFile ? imageFile.name : "Selecionar PNG/JPG..."}</span>
+                  <input 
+                    type="file" 
+                    accept="image/*"
+                    required={imageType === "file" && !editingId}
+                    onChange={(e) => setImageFile(e.target.files[0])}
+                  />
+                </div>
+              )}
             </div>
 
             <div className="admin-form-actions">
               {editingId && (
                 <button type="button" className="cancel-btn" onClick={() => {
                   setEditingId(null);
-                  setFormData({ title: "", description: "", type: "rom", url: "" });
+                  setFormData({ title: "", description: "", type: "rom", url: "", imageUrl: "" });
+                  setImageFile(null);
+                  setImageType("url");
                   setActiveTab("manage");
                 }}>
                   Cancelar
@@ -357,7 +406,7 @@ const Admin = () => {
                         <td>{item.createdAt?.toDate()?.toLocaleDateString() || "N/A"}</td>
                         <td className="actions-cell">
                           <button className="edit-btn" onClick={() => handleEdit(item)}><Edit2 size={16} /></button>
-                          <button className="delete-btn" onClick={() => handleDelete(item)}><Trash2 size={16} /></button>
+                          <button className="delete-btn" onClick={() => confirmDelete(item)}><Trash2 size={16} /></button>
                         </td>
                       </tr>
                     ))}
@@ -373,6 +422,20 @@ const Admin = () => {
           </div>
         )}
       </div>
+
+      {deleteModalOpen && (
+        <div className="modal-overlay" onClick={() => setDeleteModalOpen(false)} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          <div className="alert-modal glass" onClick={e => e.stopPropagation()} style={{ padding: '30px', maxWidth: '400px', width: '90%', textAlign: 'center', borderRadius: '20px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '15px' }}>🗑️</div>
+            <h3 style={{ marginBottom: '10px' }}>Confirmar Exclusão</h3>
+            <p style={{ opacity: 0.8, marginBottom: '25px', lineHeight: '1.5' }}>Tem certeza que deseja excluir o conteúdo "{itemToDelete?.title}"? Esta ação não pode ser desfeita.</p>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              <button onClick={() => setDeleteModalOpen(false)} style={{ padding: '10px 20px', borderRadius: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-main)', cursor: 'pointer', flex: 1 }}>Cancelar</button>
+              <button onClick={executeDelete} style={{ padding: '10px 20px', borderRadius: '10px', background: '#ff5350', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>Excluir</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

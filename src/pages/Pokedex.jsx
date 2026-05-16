@@ -68,6 +68,7 @@ const Pokedex = () => {
   const [page, setPage] = useState(0);
   const PAGE_SIZE = 20;
   const { user } = useAuth();
+  const [loginAlertOpen, setLoginAlertOpen] = useState(false);
 
   useEffect(() => {
     fetchAllPokemon();
@@ -231,7 +232,7 @@ const Pokedex = () => {
 
   const toggleFavorite = async (e, id) => {
     e.stopPropagation();
-    if (!user) return alert("Faça login para favoritar!");
+    if (!user) return setLoginAlertOpen(true);
 
     const isFav = favorites.includes(id);
     const userRef = doc(db, "users", user.uid);
@@ -442,6 +443,23 @@ const Pokedex = () => {
           description={pokemonDesc}
           onClose={() => setSelectedPokemon(null)}
         />
+      )}
+
+      {loginAlertOpen && (
+        <div className="modal-overlay" onClick={() => setLoginAlertOpen(false)} style={{ zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', backgroundColor: 'rgba(0,0,0,0.6)' }}>
+          <div className="alert-modal glass" onClick={e => e.stopPropagation()} style={{ padding: '30px', maxWidth: '400px', width: '90%', textAlign: 'center', borderRadius: '20px' }}>
+            <div style={{ fontSize: '40px', marginBottom: '15px' }}>⚠️</div>
+            <h3 style={{ marginBottom: '10px' }}>Ação Requer Login</h3>
+            <p style={{ opacity: 0.8, marginBottom: '25px', lineHeight: '1.5' }}>Você precisa estar conectado na sua conta para favoritar Pokémons. Entre ou crie uma conta agora mesmo para montar seu time dos sonhos!</p>
+            <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+              <button onClick={() => setLoginAlertOpen(false)} style={{ padding: '10px 20px', borderRadius: '10px', background: 'transparent', border: '1px solid rgba(255,255,255,0.2)', color: 'var(--text-main)', cursor: 'pointer', flex: 1 }}>Cancelar</button>
+              <button onClick={() => {
+                setLoginAlertOpen(false);
+                window.location.href = '/auth';
+              }} style={{ padding: '10px 20px', borderRadius: '10px', background: 'var(--primary-color)', border: 'none', color: '#fff', cursor: 'pointer', fontWeight: 'bold', flex: 1 }}>Fazer Login</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

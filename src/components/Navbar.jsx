@@ -15,6 +15,7 @@ const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
@@ -68,11 +69,23 @@ const Navbar = () => {
           </div>
 
           {user ? (
-            <div className="user-profile">
-              <img src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Profile" className="avatar" />
-              <button onClick={logout} className="logout-btn" title="Sair">
-                <LogOut size={18} />
+            <div className="user-profile-container">
+              <button className="user-profile-btn" onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}>
+                <img src={user.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.email}`} alt="Profile" className="avatar" />
               </button>
+              
+              {isUserMenuOpen && (
+                <div className="user-dropdown glass fade-in">
+                  <div className="user-info-dropdown">
+                    <p className="user-name">{user.displayName || "Treinador"}</p>
+                    <p className="user-email">{user.email}</p>
+                  </div>
+                  <div className="dropdown-divider"></div>
+                  <button onClick={logout} className="dropdown-item logout">
+                    <LogOut size={16} /> Sair
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <Link to="/auth" className="login-btn glass">
