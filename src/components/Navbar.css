@@ -4,6 +4,11 @@
   margin: 10px 20px;
   z-index: 999;
   padding: 10px 0;
+  background-color: var(--bg-accent); /* Cor sólida baseada no tema */
+  backdrop-filter: blur(20px); /* Mantém o desfoque para profundidade, mas com fundo opaco */
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-premium);
 }
 
 .nav-content {

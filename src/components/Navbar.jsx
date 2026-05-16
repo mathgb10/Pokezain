@@ -53,7 +53,7 @@ const Navbar = ({ navigateTo, currentView }) => {
   };
 
   return (
-    <nav className="navbar glass">
+    <nav className="navbar">
       <div className="container nav-content">
         <div onClick={() => handleNavClick("home")} className="logo" style={{ cursor: 'pointer' }}>
           <span className="logo-poke">Poke</span>
